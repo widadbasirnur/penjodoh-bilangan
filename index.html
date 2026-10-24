@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kuiz Interaktif: Penjodoh Bilangan</title>
+    <!-- Google Fonts & Confetti Library -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            background: #ffffff;
+            width: 100%;
+            max-width: 650px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            position: relative;
+        }
+        .header {
+            background: #00b894;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+        .header h1 {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        .header p {
+            font-size: 0.9rem;
+            opacity: 0.95;
+        }
+        .sound-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.25);
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-family: 'Poppins', sans-serif;
+            transition: background 0.2s;
+        }
+        .sound-btn:hover {
+            background: rgba(255, 255, 255, 0.45);
+        }
+        .quiz-body {
+            padding: 30px;
+        }
+        .progress-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            font-weight: 600;
+            color: #555;
+            font-size: 0.95rem;
+        }
+        .question-box {
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: #222;
+            margin-bottom: 25px;
+            line-height: 1.5;
+            white-space: pre-line;
+        }
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+        .option-btn {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            padding: 15px 20px;
+            text-align: left;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #495057;
+        }
+        .option-btn:hover:not(:disabled) {
+            background: #e6fffa;
+            border-color: #00b894;
+            color: #009473;
+            transform: translateY(-2px);
+        }
+        .option-btn.correct {
+            background: #d1fae5 !important;
+            border-color: #10b981 !important;
+            color: #065f46 !important;
+        }
+        .option-btn.wrong {
+            background: #fee2e2 !important;
+            border-color: #ef4444 !important;
+            color: #991b1b !important;
+        }
+        .explanation-box {
+            background: #f0fdf4;
+            border-left: 5px solid #22c55e;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+            color: #166534;
+            display: none;
+        }
+        .next-btn {
+            background: #00b894;
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: none;
+        }
+        .next-btn:hover {
+            background: #009473;
+        }
+        .result-screen {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+        .result-screen h2 {
+            font-size: 2rem;
+            color: #1f2937;
+            margin-bottom: 15px;
+        }
+        .score-display {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: #00b894;
+            margin-bottom: 15px;
+        }
+        .result-message {
+            font-size: 1.1rem;
+            color: #4b5563;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        .restart-btn {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .restart-btn:hover {
+            background: #059669;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <button class="sound-btn" id="soundToggle" onclick="toggleSound()">🔊 Muzik: Tutup</button>
+            <h1>Kuiz Bahasa Melayu</h1>
+            <p>Topik Khusus: Penjodoh Bilangan</p>
+        </div>
+
+        <div class="quiz-body" id="quizBody">
+            <div class="progress-bar">
+                <span id="questionCount">Soalan 1 dari 10</span>
+                <span id="scoreTracker">Skor: 0</span>
+            </div>
+
+            <div class="question-box" id="questionText">
+                Soalan akan dipaparkan di sini...
+            </div>
+
+            <div class="options-list" id="optionsList">
+                <!-- Pilihan jawapan dimasukkan melalui JS -->
+            </div>
+
+            <div class="explanation-box" id="explanationBox">
+                <strong>Penerangan:</strong> <span id="explanationText"></span>
+            </div>
+
+            <button class="next-btn" id="nextBtn" onclick="nextQuestion()">Seterusnya ➔</button>
+        </div>
+
+        <div class="result-screen" id="resultScreen">
+            <h2>Tahniah! Kuiz Selesai 🎉</h2>
+            <div class="score-display" id="finalScore">0/10</div>
+            <p class="result-message" id="resultMessage">Anda telah menyiapkan kuiz ini dengan jayanya.</p>
+            <button class="restart-btn" onclick="restartQuiz()">Cuba Semula 🔄</button>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                question: "1. Ayah membeli se________ kayu beluti untuk membuat rak buku di bilik bacaan.\nPilih penjodoh bilangan yang paling tepat.",
+                options: ["A. batang", "B. berkas", "C. potong", "D. baris"],
+                answer: 0,
+                explanation: "Batang digunakan untuk benda-benda yang panjang atau keras seperti kayu, pensel, tiang, dan sungai."
+            },
+            {
+                question: "2. Kakak memotong sebiji kek coklat menjadi beberapa _________ kecil untuk diberikan kepada jiran.",
+                options: ["A. ulas", "B. potong", "C. biji", "D. ketul"],
+                answer: 1,
+                explanation: "Potong digunakan untuk benda yang sudah dipotong-potong seperti kek, kuih, daging, atau buah-buahan."
+            },
+            {
+                question: "3. Pak Cik Ali memelihara beberapa _________ lembu dan kambing di kampungnya.\nPilih penjodoh bilangan untuk haiwan.",
+                options: ["A. ekor", "B. kawan", "C. gugus", "D. ketul"],
+                answer: 0,
+                explanation: "Ekor ialah penjodoh bilangan khusus yang digunakan untuk semua jenis haiwan."
+            },
+            {
+                question: "4. Ibu menggubah se________ bunga ros merah ke dalam pasu kaca di atas meja tamu.",
+                options: ["A. jambak", "B. ikat", "C. gugus", "D. rumpai"],
+                answer: 0,
+                explanation: "Jambak (atau jambangan) digunakan untuk benda yang berangkai-rangkai atau diikat menjadi satu seperti bunga dan kunci."
+            },
+            {
+                question: "5. Cikgu Aminah mengedarkan se________ kertas kepada setiap murid untuk menyiapkan latihan menulis.",
+                options: ["A. helai", "B. naskhah", "C. keping", "D. bidang"],
+                answer: 0,
+                explanation: "Helai digunakan untuk benda yang nipis dan rata seperti kertas, kain, dan daun."
+            },
+            {
+                question: "6. Pahlawan Melayu itu membawa se________ keris pusaka yang diselitkan di pinggangnya.",
+                options: ["A. bilah", "B. batang", "C. pucuk", "D. bentuk"],
+                answer: 0,
+                explanation: "Bilah digunakan untuk senjata atau benda tajam seperti keris, pisau, pedang, dan parang."
+            },
+            {
+                question: "7. Abang meminjam tiga _________ buku cerita daripada perpustakaan sekolah minggu lalu.",
+                options: ["A. buah", "B. naskhah", "C. ulas", "D. biji"],
+                answer: 1,
+                explanation: "Naskhah digunakan khas untuk bahan bacaan yang bercetak seperti buku, majalah, dan surat khabar."
+            },
+            {
+                question: "8. Di hujung kampung itu terdapat lima _________ rumah kayu tradisional yang masih didiami.",
+                options: ["A. buah", "B. deret", "C. tingkat", "D. pintu"],
+                answer: 0,
+                explanation: "Buah digunakan untuk benda-benda besar dan padu yang tidak mempunyai penjodoh bilangan khusus, seperti rumah, kereta, dan sekolah."
+            },
+            {
+                question: "9. Ali makan dua _________ durian yang manis itu sebelum majlis bermula.",
+                options: ["A. ulas", "B. biji", "C. ketul", "D. potong"],
+                answer: 0,
+                explanation: "Ulas digunakan khusus untuk bahagian buah yang ada di dalam ulasnya seperti durian, nangka, dan cempedak."
+            },
+            {
+                question: "10. Pegawai polis itu melepaskan se________ tembakan amaran ke udara untuk menghentikan suspek.",
+                options: ["A. pucuk", "B. butir", "C. das", "D. ketul"],
+                answer: 2,
+                explanation: "Das digunakan khas untuk bunyi letupan atau tembakan senjata api. (Manakala 'pucuk' digunakan untuk senjata api seperti pistol)."
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let answered = false;
+        let soundEnabled = false;
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playTone(freq, type, duration, delay = 0) {
+            if (!soundEnabled) return;
+            initAudio();
+            setTimeout(() => {
+                try {
+                    let osc = audioCtx.createOscillator();
+                    let gain = audioCtx.createGain();
+                    osc.type = type;
+                    osc.frequency.value = freq;
+                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + duration);
+                } catch(e) {}
+            }, delay);
+        }
+
+        function playCorrectSound() {
+            playTone(523.25, 'sine', 0.15, 0);
+            playTone(659.25, 'sine', 0.15, 150);
+            playTone(783.99, 'sine', 0.3, 300);
+        }
+
+        function playWrongSound() {
+            playTone(220, 'sawtooth', 0.2, 0);
+            playTone(185, 'sawtooth', 0.3, 200);
+        }
+
+        function playVictoryFanfare() {
+            playTone(523.25, 'sine', 0.2, 0);
+            playTone(523.25, 'sine', 0.2, 200);
+            playTone(523.25, 'sine', 0.2, 400);
+            playTone(659.25, 'sine', 0.6, 600);
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            let btn = document.getElementById('soundToggle');
+            if (soundEnabled) {
+                initAudio();
+                btn.innerHTML = "🔊 Muzik: Pasang";
+                playTone(440, 'sine', 0.1);
+            } else {
+                btn.innerHTML = "🔇 Muzik: Tutup";
+            }
+        }
+
+        function loadQuestion() {
+            answered = false;
+            let q = questions[currentQuestion];
+            document.getElementById('questionCount').innerText = `Soalan ${currentQuestion + 1} dari ${questions.length}`;
+            document.getElementById('scoreTracker').innerText = `Skor: ${score}`;
+            document.getElementById('questionText').innerText = q.question;
+            
+            let optionsList = document.getElementById('optionsList');
+            optionsList.innerHTML = '';
+            
+            q.options.forEach((opt, index) => {
+                let btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = opt;
+                btn.onclick = () => selectOption(index);
+                optionsList.appendChild(btn);
+            });
+
+            document.getElementById('explanationBox').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'none';
+        }
+
+        function selectOption(selectedIndex) {
+            if (answered) return;
+            answered = true;
+
+            let q = questions[currentQuestion];
+            let buttons = document.getElementsByClassName('option-btn');
+
+            if (selectedIndex === q.answer) {
+                buttons[selectedIndex].classList.add('correct');
+                score++;
+                playCorrectSound();
+                confetti({
+                    particleCount: 50,
+                    spread: 60,
+                    origin: { y: 0.7 }
+                });
+            } else {
+                buttons[selectedIndex].classList.add('wrong');
+                buttons[q.answer].classList.add('correct');
+                playWrongSound();
+            }
+
+            document.getElementById('scoreTracker').innerText = `Skor: ${score}`;
+            document.getElementById('explanationText').innerText = q.explanation;
+            document.getElementById('explanationBox').style.display = 'block';
+            document.getElementById('nextBtn').style.display = 'block';
+
+            for (let btn of buttons) {
+                btn.disabled = true;
+            }
+        }
+
+        function nextQuestion() {
+            currentQuestion++;
+            if (currentQuestion < questions.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            document.getElementById('quizBody').style.display = 'none';
+            document.getElementById('resultScreen').style.display = 'block';
+            document.getElementById('finalScore').innerText = `${score}/10`;
+            
+            let msg = "";
+            if (score === 10) {
+                msg = "Tahniah! Anda sangat mahir dalam topik Penjodoh Bilangan!";
+            } else if (score >= 7) {
+                msg = "Syabas! Prestasi yang cemerlang dan membanggakan!";
+            } else {
+                msg = "Bagus! Teruskan latihan untuk lebih memahami penjodoh bilangan.";
+            }
+            document.getElementById('resultMessage').innerText = msg;
+            playVictoryFanfare();
+            
+            confetti({
+                particleCount: 150,
+                spread: 100,
+                origin: { y: 0.6 }
+            });
+        }
+
+        function restartQuiz() {
+            currentQuestion = 0;
+            score = 0;
+            document.getElementById('quizBody').style.display = 'block';
+            document.getElementById('resultScreen').style.display = 'none';
+            loadQuestion();
+        }
+
+        window.onload = loadQuestion;
+    </script>
+</body>
+</html>
